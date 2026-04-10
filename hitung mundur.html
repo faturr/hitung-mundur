@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Penghitung Mundur & Detik Tersisa</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, 'Segoe UI', 'Inter', 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0b2b3f 0%, #1a4a6f 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Container utama 2 kolom */
+    .dashboard {
+      max-width: 1300px;
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(2px);
+      border-radius: 3rem;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2);
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    /* gaya kedua kolom */
+    .col-left, .col-right {
+      flex: 1;
+      min-width: 280px;
+      padding: 2rem 1.8rem;
+      transition: all 0.2s;
+    }
+
+    .col-left {
+      background: rgba(255,255,240,0.92);
+      border-right: 2px solid rgba(0,0,0,0.1);
+      backdrop-filter: blur(4px);
+    }
+
+    .col-right {
+      background: rgba(10, 25, 35, 0.85);
+      backdrop-filter: blur(4px);
+      color: #f0f9ff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Tema kiri */
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #1e4a6e;
+      margin-bottom: 0.5rem;
+      border-left: 6px solid #f39c12;
+      padding-left: 18px;
+    }
+
+    .sub {
+      color: #2c5a7a;
+      margin-bottom: 2rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding-left: 24px;
+    }
+
+    .set-time-panel {
+      background: white;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      font-weight: 600;
+      color: #1f4e6e;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+    }
+
+    .datetime-local-input {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 60px;
+      border: 1.5px solid #cbd5e1;
+      font-size: 1rem;
+      background: #fefefe;
+      transition: 0.2s;
+      font-family: monospace;
+    }
+
+    .datetime-local-input:focus {
+      border-color: #f39c12;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(243,156,18,0.2);
+    }
+
+    .btn-set {
+      background: #2c7da0;
+      border: none;
+      width: 100%;
+      padding: 12px;
+      border-radius: 60px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .btn-set:hover {
+      background: #1f5e7e;
+      transform: scale(0.98);
+    }
+
+    .info-target {
+      background: #eef2f7;
+      border-radius: 1.5rem;
+      padding: 1rem 1.2rem;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .target-time {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #1e4663;
+      word-break: break-all;
+    }
+
+    .status-badge {
+      font-size: 0.8rem;
+      background: #f39c12;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 40px;
+      color: #2d2b1f;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    /* area countdown utama (kiri) */
+    .countdown-area {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 2rem;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      margin-top: 1rem;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+
+    .countdown-digits {
+      font-size: 2.8rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 4px;
+      background: #0f2c3b;
+      display: inline-block;
+      padding: 0.5rem 1.2rem;
+      border-radius: 70px;
+      color: #f9e45b;
+      margin: 0.5rem 0;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .countdown-label {
+      font-weight: 600;
+      color: #2b5d7c;
+    }
+
+    /* kolom kanan: detik tersisa dengan gaya besar */
+    .right-title {
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      background: rgba(255,255,210,0.15);
+      display: inline-block;
+      padding: 0.2rem 1.2rem;
+      border-radius: 40px;
+      margin-bottom: 1rem;
+    }
+
+    .seconds-big {
+      font-size: 6rem;
+      font-weight: 800;
+      font-family: monospace;
+      background: #00000044;
+      padding: 0.2rem 1rem;
+      border-radius: 2rem;
+      backdrop-filter: blur(8px);
+      display: inline-block;
+      margin: 0.8rem 0;
+      letter-spacing: 6px;
+      color: #f7d44a;
+      text-shadow: 0 0 5px #ffb347;
+    }
+
+    .seconds-label {
+      font-size: 1.2rem;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    .progress-info {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      background: #00000033;
+      padding: 10px 20px;
+      border-radius: 60px;
+    }
+
+    hr {
+      margin: 1rem 0;
+      border-color: #ffffff30;
+    }
+
+    .reset-hint {
+      font-size: 0.7rem;
+      margin-top: 1rem;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 780px) {
+      .col-left, .col-right {
+        flex: auto;
+        width: 100%;
+      }
+      .col-left {
+        border-right: none;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+      }
+      .seconds-big {
+        font-size: 4rem;
+      }
+      .countdown-digits {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- KOLOM KIRI: setting waktu & hitung mundur (format jam, menit, detik) -->
+  <div class="col-left">
+    <h2>⏳ Atur Waktu Tujuan</h2>
+    <div class="sub">Pilih tanggal & jam target → mulai hitung mundur</div>
+
+    <div class="set-time-panel">
+      <div class="input-group">
+        <label>📅 Pilih Waktu Target (WIB / lokal)</label>
+        <input type="datetime-local" id="targetDateTime" class="datetime-local-input">
+      </div>
+      <button id="setTimeBtn" class="btn-set">🚀 SET & MULAI HITUNG MUNDUR</button>
+      
+      <div class="info-target" id="infoTargetPanel">
+        <span>🎯 Target saat ini:</span><br>
+        <span id="displayTargetTime" class="target-time">— belum diatur —</span>
+        <div id="targetStatusMsg" class="status-badge" style="background:#b0bec5;">Belum aktif</div>
+      </div>
+    </div>
+
+    <!-- Area tampilan countdown (hari, jam, menit, detik) -->
+    <div class="countdown-area">
+      <div class="countdown-label">⌛ SISA WAKTU MENUJU TARGET</div>
+      <div id="countdownDisplay" class="countdown-digits">00 : 00 : 00 : 00</div>
+      <div style="font-size: 0.85rem; margin-top: 6px;">(hari : jam : menit : detik)</div>
+    </div>
+    <div class="reset-hint">✨ Set waktu baru kapan saja untuk memulai ulang hitung mundur</div>
+  </div>
+
+  <!-- KOLOM KANAN: Tampilkan berapa detik tersisa menuju waktu yang dituju -->
+  <div class="col-right">
+    <div class="right-title">⏱️ DETIK TERSISA</div>
+    <div id="secondsRemainingBig" class="seconds-big">0</div>
+    <div class="seconds-label">detik menuju waktu target</div>
+    
+    <div class="progress-info" id="progressNote">
+      💡 Belum ada target, atur waktu terlebih dahulu.
+    </div>
+    <hr>
+    <div style="font-size:0.8rem; opacity:0.7;">⏲️ Real-time update setiap detik</div>
+  </div>
+</div>
+
+<script>
+  // ----- ELEMEN DOM ------
+  const targetDateTimeInput = document.getElementById('targetDateTime');
+  const setTimeBtn = document.getElementById('setTimeBtn');
+  const displayTargetSpan = document.getElementById('displayTargetTime');
+  const targetStatusMsg = document.getElementById('targetStatusMsg');
+  const countdownDisplayDiv = document.getElementById('countdownDisplay');
+  const secondsRemainingBigSpan = document.getElementById('secondsRemainingBig');
+  const progressNoteDiv = document.getElementById('progressNote');
+
+  // variabel state
+  let targetTimestamp = null;        // milliseconds (Date.parse)
+  let timerInterval = null;          // setInterval id
+  let isCountdownActive = false;      // apakah sudah ada target yang valid & belum lewat?
+
+  // ----- helper: format countdown (hari, jam, menit, detik) dari milliseconds diff -----
+  function formatCountdownHMS(diffMs) {
+    if (diffMs <= 0) return "00 : 00 : 00 : 00";
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    return `${days.toString().padStart(2, '0')} : ${hours.toString().padStart(2, '0')} : ${minutes.toString().padStart(2, '0')} : ${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // helper: hanya detik tersisa (integer) dari diffMs
+  function getRemainingSeconds(diffMs) {
+    if (diffMs <= 0) return 0;
+    return Math.floor(diffMs / 1000);
+  }
+
+  // Update semua UI berdasarkan targetTimestamp dan waktu sekarang
+  function updateAllDisplays() {
+    if (!targetTimestamp) {
+      // tidak ada target
+      countdownDisplayDiv.innerText = "00 : 00 : 00 : 00";
+      secondsRemainingBigSpan.innerText = "0";
+      if (progressNoteDiv) progressNoteDiv.innerHTML = "⚙️ Belum ada target, atur waktu terlebih dahulu.";
+      if (targetStatusMsg) {
+        targetStatusMsg.innerText = "⏸️ Tidak aktif";
+        targetStatusMsg.style.background = "#b0bec5";
+      }
+      return;
+    }
+
+    const now = new Date().getTime();
+    const diffMs = targetTimestamp - now;
+    
+    // Jika waktu target sudah lewat (diff <= 0)
+    if (diffMs <= 0) {
+      // tampilkan 0 semua dan status EXPIRED
+      countdownDisplayDiv.innerText = "00 : 00 : 00 : 00";
+      secondsRemainingBigSpan.innerText = "0";
+      if (progressNoteDiv) progressNoteDiv.innerHTML = "⛔ Waktu target telah terlewati. Set waktu baru untuk memulai ulang.";
+      if (targetStatusMsg) {
+        targetStatusMsg.innerText = "⌛ Waktu habis";
+        targetStatusMsg.style.background = "#e67e22";
+      }
+      // Jika countdown aktif tapi expired, kita tetap biarkan, tapi bisa dianggap selesai
+      return;
+    }
+    
+    // kondisi normal: masih ada sisa waktu
+    const formattedCount = formatCountdownHMS(diffMs);
+    countdownDisplayDiv.innerText = formattedCount;
+    const secondsLeft = getRemainingSeconds(diffMs);
+    secondsRemainingBigSpan.innerText = secondsLeft.toLocaleString('id-ID');
+    
+    // update progress note info
+    if (progressNoteDiv) {
+      progressNoteDiv.innerHTML = `🎯 Menuju target, tersisa ${secondsLeft.toLocaleString('id-ID')} detik lagi.`;
+    }
+    if (targetStatusMsg) {
+      targetStatusMsg.innerText = "✅ Aktif • Menghitung Mundur";
+      targetStatusMsg.style.background = "#2ecc71";
+    }
+  }
+
+  // fungsi untuk menghentikan timer interval jika ada (cleanup)
+  function stopTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+
+  // memulai timer setiap 1 detik untuk update tampilan (kiri & kanan)
+  function startTimerRefresh() {
+    if (timerInterval) stopTimer();
+    // update seketika
+    updateAllDisplays();
+    timerInterval = setInterval(() => {
+      updateAllDisplays();
+      
+      // optional: jika targetTimestamp sudah terlewati dan kita ingin menghentikan interval?
+      // Tapi tidak perlu, karena akan tetap menampilkan 0. Namun jika user mengganti target di tengah,
+      // timer tetap berjalan dan memperbarui data baru. Untuk keandalan kita cek validitas target.
+      // Tidak perlu hentikan otomatis, biarkan saja terus update karena akan selalu ngecek diff.
+      // Efisien.
+    }, 1000);
+  }
+
+  // fungsi utama: set waktu target dari input datetime-local
+  function setNewTarget() {
+    const rawValue = targetDateTimeInput.value;
+    if (!rawValue) {
+      // kasih notifikasi ringan (alert atau tampil di info)
+      const infoTargetDiv = document.getElementById('infoTargetPanel');
+      // tanpa alert mengganggu, tampilkan pesan di status msg
+      if (targetStatusMsg) {
+        targetStatusMsg.innerText = "⚠️ Pilih tanggal & jam terlebih dahulu!";
+        targetStatusMsg.style.background = "#e67e22";
+        setTimeout(() => {
+          if (targetStatusMsg && !targetTimestamp) {
+            targetStatusMsg.innerText = "Belum aktif";
+            targetStatusMsg.style.background = "#b0bec5";
+          }
+        }, 2000);
+      }
+      return;
+    }
+    
+    // Parsing: datetime-local menghasilkan string "YYYY-MM-DDThh:mm"
+    // Browser akan menganggap sebagai waktu LOCAL (sesuai zona waktu pengguna)
+    // Kita gunakan konstruksi Date dengan string + 'T' sudah lokal. Hati-hati: new Date(string) 
+    // pada beberapa browser bisa menganggap UTC jika tidak pakai cara manual. Tapi datetime-local value 
+    // didesain untuk representasi lokal, kita baca dengan cara: 
+    // membuat date dengan split manual agar konsisten (zona lokal).
+    const [datePart, timePart] = rawValue.split('T');
+    if (!datePart || !timePart) return;
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
+    // Membuat tanggal dengan komponen lokal (dianggap sebagai waktu sistem user)
+    const targetDate = new Date(year, month-1, day, hour, minute, 0, 0);
+    
+    // validasi apakah valid date
+    if (isNaN(targetDate.getTime())) {
+      if (targetStatusMsg) {
+        targetStatusMsg.innerText = "❌ Format waktu tidak valid";
+        targetStatusMsg.style.background = "#c0392b";
+      }
+      return;
+    }
+    
+    const now = new Date();
+    if (targetDate <= now) {
+      // Tampilkan peringatan bahwa waktu sudah lewat, tapi tetap diizinkan jika user mau? 
+      // Tapi UX lebih baik: kasih tahu dan tidak set? Atau boleh set tapi akan langsung expired.
+      // Aplikasi ini akan tetap menerima, namun countdown akan 0. agar fleksibel, kita tetap set.
+      if (targetStatusMsg) {
+        targetStatusMsg.innerText = "⚠️ Waktu yang dipilih sudah lewat! (akan tampak 0)";
+        targetStatusMsg.style.background = "#f39c12";
+      } else {}
+    } else {
+      if (targetStatusMsg) {
+        targetStatusMsg.innerText = "✅ Target valid, hitung mundur aktif";
+        targetStatusMsg.style.background = "#2ecc71";
+      }
+    }
+    
+    // simpan timestamp (milliseconds)
+    targetTimestamp = targetDate.getTime();
+    
+    // Update info target (tampilan teks)
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    const formattedTarget = targetDate.toLocaleString('id-ID', options);
+    displayTargetSpan.innerText = formattedTarget;
+    
+    // update panel info bahwa sudah di set
+    const infoTargetDivHelper = document.getElementById('infoTargetPanel');
+    if (infoTargetDivHelper) {
+      // biarkan target time muncul
+    }
+    
+    // restart timer (agar refresh data baru)
+    startTimerRefresh();
+    // panggil update manual untuk menampilkan langsung
+    updateAllDisplays();
+  }
+  
+  // fungsi untuk menginisialisasi contoh pertama kali (default ke 10 menit dari sekarang biar menarik)
+  function setDefaultExampleTime() {
+    const defaultDate = new Date();
+    defaultDate.setMinutes(defaultDate.getMinutes() + 10);
+    defaultDate.setSeconds(0);
+    defaultDate.setMilliseconds(0);
+    // isi input datetime-local dengan nilai default
+    const year = defaultDate.getFullYear();
+    const month = String(defaultDate.getMonth() + 1).padStart(2, '0');
+    const day = String(defaultDate.getDate()).padStart(2, '0');
+    const hours = String(defaultDate.getHours()).padStart(2, '0');
+    const minutes = String(defaultDate.getMinutes()).padStart(2, '0');
+    const defaultString = `${year}-${month}-${day}T${hours}:${minutes}`;
+    targetDateTimeInput.value = defaultString;
+    // kemudian set target
+    setNewTarget();
+  }
+  
+  // Event listener untuk tombol SET
+  setTimeBtn.addEventListener('click', () => {
+    setNewTarget();
+  });
+  
+  // Opsional: ketika halaman pertama kali dimuat, langsung set contoh waktu (10 menit dari sekarang)
+  // agar pengguna langsung melihat hitung mundur tanpa perlu repot input.
+  // namun agar tidak membingungkan, kita beri demo default tapi tetap bisa diubah.
+  // Jika ingin langsung aktif: uncomment baris di bawah.
+  // Untuk pengalaman baik, langsung set target default agar kolom kanan dan kiri langsung menunjukkan hitung mundur.
+  // saya akan set awal: 10 menit dari sekarang sebagai contoh. (tapi user bebas ganti)
+  
+  // initialize halaman: set default demo (10 menit lagi) agar kedua kolom langsung hidup.
+  function initializePage() {
+    // coba set target default : 10 menit dari sekarang jika belum ada target ter-set
+    if (!targetTimestamp) {
+      const defaultExample = new Date();
+      defaultExample.setMinutes(defaultExample.getMinutes() + 10);
+      defaultExample.setSeconds(0);
+      defaultExample.setMilliseconds(0);
+      const y = defaultExample.getFullYear();
+      const m = String(defaultExample.getMonth() + 1).padStart(2, '0');
+      const d = String(defaultExample.getDate()).padStart(2, '0');
+      const hh = String(defaultExample.getHours()).padStart(2, '0');
+      const mm = String(defaultExample.getMinutes()).padStart(2, '0');
+      targetDateTimeInput.value = `${y}-${m}-${d}T${hh}:${mm}`;
+      setNewTarget();  // akan mengisi targetTimestamp dan mulai timer
+    } else {
+      startTimerRefresh();
+    }
+  }
+  
+  // pastikan semua beres, dan beri label bahwa kita dapat mengatur ulang kapan saja
+  initializePage();
+  
+  // Bersihkan interval jika halaman di-unload (opsional, tidak wajib)
+  window.addEventListener('beforeunload', () => {
+    if (timerInterval) clearInterval(timerInterval);
+  });
+  
+  // juga jika pengguna ingin mengatur ulang, tombol set sudah dihandle. 
+  // tambahan: ketika target berubah otomatis timer restart karena startTimerRefresh membersihkan dan membuat baru.
+  // Untuk kasus jika user memilih waktu yang sama atau beda, timer akan terus berjalan. 
+  // Dukungan: Validasi double check updateAllDisplays dipanggil tiap detik, jadi detik tersisa akan selalu sinkron.
+  
+  // Fitur tambahan: validasi input datetime-local tidak boleh kosong, jika kosong saat set akan notifikasi.
+  // dan jika target sudah terlewati, kolom kanan menunjukkan 0 detik, kiri 00:00:00:00, lalu jika user set waktu baru di masa depan, semuanya kembali normal.
+  // code sudah komplit.
+  
+  // Jika ada kesalahan minor seperti "targetTimestamp null" saat updateAllDisplays, sudah ditangani dengan guard clause.
+  // Selesai.
+</script>
+</body>
+</html>
